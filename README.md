@@ -29,5 +29,10 @@ docker run --name mysql-transit-benchmark \
   -d mysql/mysql-server:5.7
 ```
 
+We'll need a queue from which to pull test data:
+```
+docker run -d -p 5672:5672 --hostname my-rabbit --name some-rabbit rabbitmq:3
+```
+
 And a worker process to perform the writes.
 

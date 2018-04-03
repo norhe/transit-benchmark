@@ -1,27 +1,28 @@
-package main
+package queue
 
 import (
+	"fmt"
 	"log"
-	"time"
+	"math/rand"
+	"os"
+	"strconv"
 
 	"github.com/norhe/transit-benchmark/utils"
-
 	"github.com/streadway/amqp"
 )
 
-type TestOperation struct {
-	StartTime   time.Time
-	EndTime     time.Time
-	Operation   string // encrypt, decrypt, hash, etc
-	Exception   string // shuold be null
-	PayloadSize int32
+// pass in NUM_RECORDS and MAX_RECORD_SIZE as env vars
+func getEnv() (int, int) {
+	num_records, err := strconv.Atoi(os.Getenv("NUM_RECORDS"))
+	utils.FailOnError(err, "Couldn't retrieve NUMBER_RECORDS")
+
+	max_size, err := strconv.Atoi(os.Getenv("MAX_RECORD_SIZE"))
+	utils.FailOnError(err, "Couldn't retrieve MAX_RECORD_SIZE")
+	return num_records, max_size
 }
 
-func timestamp() time.Time {
-	return time.Now()
-}
-
-func main() {
+// pass in NUM_RECORDS and MAX_RECORD_SIZE as env vars
+func SeedQueueRandom() {
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	utils.FailOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
@@ -40,21 +41,24 @@ func main() {
 	)
 	utils.FailOnError(err, "Failed to declare a queue")
 
-	body := "hello"
-	err = ch.Publish(
-		"",     // exchange
-		q.Name, // routing key
-		false,  // mandatory
-		false,  // immediate
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(body),
-		})
-	log.Printf(" [x] Sent %s", body)
-	utils.FailOnError(err, "Failed to publish a message")
+	num_records, max_size := getEnv()
+
+	// Seed the queue
+	for n := 0; n <= num_records; n++ {
+		err = ch.Publish(
+			"",     // exchange
+			q.Name, // routing key
+			false,  // mandatory
+			false,  // immediate
+			amqp.Publishing{
+				ContentType: "text/plain",
+				Body:        []byte(utils.RandSeq(rand.Intn(max_size))),
+			})
+		utils.FailOnError(err, "Failed to publish a message")
+		fmt.Println(n)
+	}
 
 	log.Printf("Benchmark all the things")
-	log.Print(timestamp())
 
 	msgs, err := ch.Consume(
 		q.Name, // queue
