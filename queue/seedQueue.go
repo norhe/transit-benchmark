@@ -58,9 +58,9 @@ func SeedQueueRandom() {
 		fmt.Println(n)
 	}
 
-	log.Printf("Benchmark all the things")
+	log.Printf("Seeded the queue with %d messages with max length %d", num_records, max_size)
 
-	msgs, err := ch.Consume(
+	/*msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
 		true,   // auto-ack
@@ -80,5 +80,5 @@ func SeedQueueRandom() {
 	}()
 
 	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-	<-forever
+	<-forever*/
 }
