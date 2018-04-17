@@ -1,24 +1,12 @@
 package main
 
 import (
-	"log"
 	"os"
-	"time"
 
-	"github.com/norhe/transit-benchmark/queue"
+	"github.com/mitchellh/cli"
+	"github.com/norhe/transit-benchmark/command"
+	"github.com/norhe/transit-benchmark/utils"
 )
-
-type TestOperation struct {
-	StartTime   time.Time
-	EndTime     time.Time
-	Operation   string // encrypt, decrypt, hash, etc
-	Exception   string // shuold be null
-	PayloadSize int32
-}
-
-func timestamp() time.Time {
-	return time.Now()
-}
 
 /* App can be run in a variety of ways.  One can seed random
 *  strings into the queue.  One can also drain the queue issuing
@@ -27,8 +15,47 @@ func timestamp() time.Time {
 *  seed the data with the first run, and then run again in test mode.
  */
 func main() {
-	log.Println("Executing in")
-	if os.Getenv("SEED") == "true" {
-		queue.SeedQueueRandom()
+	ui := &cli.BasicUi{
+		Reader:      os.Stdin,
+		Writer:      os.Stdout,
+		ErrorWriter: os.Stderr,
 	}
+
+	c := cli.NewCLI("app", "0.0.1")
+
+	c.Args = os.Args[1:]
+
+	c.Commands = map[string]cli.CommandFactory{
+		"seed": func() (cli.Command, error) {
+			return &command.SeedCommand{
+				Ui: &cli.ColoredUi{
+					Ui:          ui,
+					OutputColor: cli.UiColorBlue,
+				},
+			}, nil
+		},
+		"run": func() (cli.Command, error) {
+			return &command.RunCommand{
+				Ui: &cli.ColoredUi{
+					Ui:          ui,
+					OutputColor: cli.UiColorGreen,
+				},
+			}, nil
+		},
+	}
+	/*if os.Getenv("SEED") == "true" {
+		queue.SeedQueueRandom()
+	} else if os.Getenv("RUN_TEST") == "true" {
+		log.Printf("Executing test...")
+	} else {
+		log.Println("Please pass in SEED=true or RUN_TEST=true as environment variables.")
+	}*/
+
+	exitStatus, err := c.Run()
+	utils.FailOnError(err, "Failed to run command")
+	os.Exit(exitStatus)
+}
+
+func benchmark() {
+
 }
