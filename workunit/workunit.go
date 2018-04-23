@@ -1,14 +1,21 @@
 package workunit
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+
+	"github.com/norhe/transit-benchmark/utils"
+)
 
 // WorkUnit : This represents a single test.
 type WorkUnit struct {
-	StartTime   time.Time
-	EndTime     time.Time
-	Operation   OperationType
-	Exception   string // shuold be null
-	PayloadSize int32
+	StartTime   time.Time     `json:"StartTime"`
+	EndTime     time.Time     `json:"EndTime"`
+	Operation   OperationType `json:"Operation"`
+	Exception   string        `json:"Exception"`
+	PayloadSize int           `json:"PayloadSize"`
+	Payload     []byte        `json:"Payload"`
+	Output      string        `json:"Output"`
 }
 
 // OperationType : The API operation we will perform for a unit of work
@@ -26,3 +33,31 @@ const (
 	SignData            OperationType = 7
 	VerifySignedData    OperationType = 8
 )
+
+// WorkUnitByName : Retrieve by name
+var WorkUnitByName = map[string]OperationType{
+	"Encrypt":             Encrypt,
+	"Decrypt":             Decrypt,
+	"Rewrap":              Rewrap,
+	"GenerateDataKey":     GenerateDataKey,
+	"GenerateRandomBytes": GenerateRandomBytes,
+	"HashData":            HashData,
+	"GenerateHMAC":        GenerateHMAC,
+	"SignData":            SignData,
+	"VerifySignedData":    VerifySignedData,
+}
+
+// ToJSON : Convert our workunit to JSON
+func ToJSON(wu WorkUnit) []byte {
+	unit, err := json.Marshal(wu)
+	utils.FailOnError(err, "Failed to encode WorkUnit to JSON.")
+	return unit
+}
+
+// ParseJSON : Convert our workunit to JSON
+func ParseJSON(data []byte) WorkUnit {
+	var unit WorkUnit
+	err := json.Unmarshal(data, &unit)
+	utils.FailOnError(err, "Failed to decode JSON to WorkUnit")
+	return unit
+}
