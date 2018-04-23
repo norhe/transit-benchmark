@@ -2,14 +2,13 @@ package queue
 
 import (
 	"log"
-	"math/rand"
 
 	"github.com/norhe/transit-benchmark/utils"
 	"github.com/streadway/amqp"
 )
 
-// SeedQueueRandom : seeds random messages to be transitted
-func SeedQueueRandom(queueAddr string, numRecords, maxRecordSize int) {
+// DrainQueue : When a test is run it will drain a queue to find messages to send
+func DrainQueue(queueAddr string) {
 	conn, err := amqp.Dial(queueAddr)
 	utils.FailOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
@@ -28,26 +27,10 @@ func SeedQueueRandom(queueAddr string, numRecords, maxRecordSize int) {
 	)
 	utils.FailOnError(err, "Failed to declare a queue")
 
-	// Seed the queue
-	for n := 0; n <= numRecords; n++ {
-		err := ch.Publish(
-			"",     // exchange
-			q.Name, // routing key
-			false,  // mandatory
-			false,  // immediate
-			amqp.Publishing{
-				ContentType: "text/plain",
-				Body:        []byte(utils.RandSeq(rand.Intn(maxRecordSize))),
-			})
-		utils.FailOnError(err, "Failed to publish a message")
-	}
-
-	log.Printf("Seeded the queue with %d messages with max length %d", numRecords, maxRecordSize)
-
-	/*msgs, err := ch.Consume(
+	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
-		true,   // auto-ack
+		false,  // auto-ack
 		false,  // exclusive
 		false,  // no-local
 		false,  // no-wait
@@ -60,9 +43,10 @@ func SeedQueueRandom(queueAddr string, numRecords, maxRecordSize int) {
 	go func() {
 		for d := range msgs {
 			log.Printf("Received a message: %s", d.Body)
+			d.Ack(false)
 		}
 	}()
 
 	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-	<-forever*/
+	<-forever
 }
