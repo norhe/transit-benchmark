@@ -7,8 +7,8 @@ import (
 	"github.com/streadway/amqp"
 )
 
-// DrainQueue : When a test is run it will drain a queue to find messages to send
-func DrainQueue(queueAddr string) {
+// DrainQueueTransit : When a test is run it will drain a queue to find messages to send
+func DrainQueueTransit(queueAddr, vaultAddr, vaultToken, transitKeyName string) {
 	conn, err := amqp.Dial(queueAddr)
 	utils.FailOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
@@ -41,9 +41,10 @@ func DrainQueue(queueAddr string) {
 	forever := make(chan bool)
 
 	go func() {
-		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
-			d.Ack(false)
+		for msg := range msgs {
+			exec_work.ExecuteWorkUnit(vaultAddr, vaultToken, keyName, msg.Body)
+			//log.Printf("Received a message: %s", msg.Body)
+			msg.Ack(false)
 		}
 	}()
 

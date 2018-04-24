@@ -2,8 +2,10 @@ package vault
 
 import (
 	"encoding/base64"
+	"errors"
 	"log"
-	"os"
+
+	"github.com/norhe/transit-benchmark/workunit"
 
 	"github.com/hashicorp/vault/api"
 	"github.com/norhe/transit-benchmark/utils"
@@ -12,18 +14,36 @@ import (
 var vlt *api.Client
 var keyName string
 
-// Assumed you passed in VAULT_ADDR, VAULT_TOKEN
-// and BENCHMARK_KEY_NAME as env vars
-func init() {
-	cfg := api.DefaultConfig()
+// reuse our client if we can
+func initClient(vaultAddr, vaultToken string) *api.Client {
+	if nil == vlt {
+		cfg := api.DefaultConfig()
+		cfg.Address = vaultAddr
 
-	c, err := api.NewClient(cfg)
-	utils.FailOnError(err, "Failed initializing Vault client.")
-	keyName = os.Getenv("BENCHMARK_KEY_NAME")
-	vlt = c
+		client, err := api.NewClient(cfg)
+		utils.FailOnError(err, "Failed to initialize Vault client")
+
+		client.SetToken(vaultToken)
+
+		vlt = client
+	}
 }
 
-func DecryptString(ciphertext string) ([]byte, error) {
+// HandleCall : we want a generic way to invoke Vault calls.  The OperationType should
+// tell the vault client what to do
+func HandleCall(vaultAddr, vaultToken, keyName string, wu WorkUnit) (*WorkUnit, error) {
+	initClient(vaultAddr, vaultToken)
+	switch op := wu.OperationType; op {
+	case workunit.OperationType.Encrypt:
+		return encryptString(wu.Payload, keyName)
+	case workunit.OperationType.SignData:
+		return signData(wu.Payload, keyName)
+	default:
+		return nil, errors.New("no suitable OperationType found")
+	}
+}
+
+/*func DecryptString(ciphertext string) ([]byte, error) {
 	decrypted_contents, err := vlt.Logical().Write("transit/decrypt/"+keyName, map[string]interface{}{
 		"ciphertext": ciphertext,
 	})
@@ -34,4 +54,24 @@ func DecryptString(ciphertext string) ([]byte, error) {
 	utils.FailOnError(err, "Error decoding decrypted contents: %s")
 
 	return decoded, err
+}*/
+
+func encryptString(ciphertext, keyName string) (string, error) {
+	log.Printf("Encrypting: %s", ciphertext)
+
+	// Payload must be base64 encoded before sending to Vault
+	encoded := base64.StdEncoding.EncodeToString([]byte(ciphertext))
+
+	log.Printf("Encoded: %s", encoded)
+
+	// Write to Vault
+	encryptedContents, err := vlt.Logical().Write("transit/encrypt/"+KEY_NAME, map[string]interface{}{
+		"plaintext": encoded,
+	})
+	log.Printf("Encrypted: %+v", encrypted_contents)
+	if err != nil {
+		log.Fatalf("Error encrypting file: %s", err)
+	}
+
+	return encryptedContents.Data["ciphertext"].(string), err
 }
