@@ -28,5 +28,5 @@ func RandSeq(n int) string {
 
 // Timestamp : convenience function with an expressive name
 func Timestamp() time.Time {
-	return time.Now()
+	return time.Now().UTC()
 }

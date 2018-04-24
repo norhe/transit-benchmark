@@ -3,6 +3,7 @@ package queue
 import (
 	"log"
 
+	"github.com/norhe/transit-benchmark/exec_work"
 	"github.com/norhe/transit-benchmark/utils"
 	"github.com/streadway/amqp"
 )
@@ -42,7 +43,7 @@ func DrainQueueTransit(queueAddr, vaultAddr, vaultToken, transitKeyName string) 
 
 	go func() {
 		for msg := range msgs {
-			exec_work.ExecuteWorkUnit(vaultAddr, vaultToken, keyName, msg.Body)
+			execwork.ExecuteWorkUnit(vaultAddr, vaultToken, transitKeyName, msg.Body)
 			//log.Printf("Received a message: %s", msg.Body)
 			msg.Ack(false)
 		}

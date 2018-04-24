@@ -15,7 +15,7 @@ var vlt *api.Client
 var keyName string
 
 // reuse our client if we can
-func initClient(vaultAddr, vaultToken string) *api.Client {
+func initClient(vaultAddr, vaultToken string) {
 	if nil == vlt {
 		cfg := api.DefaultConfig()
 		cfg.Address = vaultAddr
@@ -31,15 +31,20 @@ func initClient(vaultAddr, vaultToken string) *api.Client {
 
 // HandleCall : we want a generic way to invoke Vault calls.  The OperationType should
 // tell the vault client what to do
-func HandleCall(vaultAddr, vaultToken, keyName string, wu WorkUnit) (*WorkUnit, error) {
+func HandleCall(vaultAddr, vaultToken, keyName string, wu *workunit.WorkUnit) error {
 	initClient(vaultAddr, vaultToken)
-	switch op := wu.OperationType; op {
-	case workunit.OperationType.Encrypt:
-		return encryptString(wu.Payload, keyName)
-	case workunit.OperationType.SignData:
-		return signData(wu.Payload, keyName)
+	op := wu.Operation
+	switch op {
+	case 0: // Encrypt
+		cipherText, err := encryptString(wu.Payload, keyName)
+		wu.Output = cipherText
+		return err
+	case 7: // SignData
+		cipherText, err := signData(wu.Payload, keyName)
+		wu.Output = cipherText
+		return err
 	default:
-		return nil, errors.New("no suitable OperationType found")
+		return errors.New("no suitable OperationType found")
 	}
 }
 
@@ -56,19 +61,39 @@ func HandleCall(vaultAddr, vaultToken, keyName string, wu WorkUnit) (*WorkUnit, 
 	return decoded, err
 }*/
 
-func encryptString(ciphertext, keyName string) (string, error) {
-	log.Printf("Encrypting: %s", ciphertext)
+func encryptString(payload []byte, keyName string) (string, error) {
+	log.Printf("Encrypting: %s", payload)
 
 	// Payload must be base64 encoded before sending to Vault
-	encoded := base64.StdEncoding.EncodeToString([]byte(ciphertext))
+	encoded := base64.StdEncoding.EncodeToString(payload)
 
 	log.Printf("Encoded: %s", encoded)
 
 	// Write to Vault
-	encryptedContents, err := vlt.Logical().Write("transit/encrypt/"+KEY_NAME, map[string]interface{}{
+	encryptedContents, err := vlt.Logical().Write("transit/encrypt/"+keyName, map[string]interface{}{
 		"plaintext": encoded,
 	})
-	log.Printf("Encrypted: %+v", encrypted_contents)
+	log.Printf("Encrypted: %+v", encryptedContents)
+	if err != nil {
+		log.Fatalf("Error encrypting file: %s", err)
+	}
+
+	return encryptedContents.Data["ciphertext"].(string), err
+}
+
+func signData(payload []byte, keyName string) (string, error) {
+	log.Printf("Encrypting: %s", payload)
+
+	// Payload must be base64 encoded before sending to Vault
+	encoded := base64.StdEncoding.EncodeToString(payload)
+
+	log.Printf("Encoded: %s", encoded)
+
+	// Write to Vault
+	encryptedContents, err := vlt.Logical().Write("transit/encrypt/"+keyName, map[string]interface{}{
+		"plaintext": encoded,
+	})
+	log.Printf("Encrypted: %+v", encryptedContents)
 	if err != nil {
 		log.Fatalf("Error encrypting file: %s", err)
 	}
