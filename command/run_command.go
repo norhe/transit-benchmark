@@ -36,7 +36,7 @@ func (c *RunCommand) Run(args []string) int {
 	c.Ui.Output(fmt.Sprintf("Would connect to queue at %s and send messages to %s Vault server for key %s", c.QueueAddr, c.VaultAddr, c.TransitKeyName))
 
 	//queue.SeedQueueRandom(c.QueueAddr, c.NumRecords, c.MaxRecordSize)
-	queue.DrainQueue(c.QueueAddr)
+	queue.DrainQueue(c.QueueAddr, c.VaultAddr, c.VaultToken, c.TransitKeyName)
 
 	return 0
 }

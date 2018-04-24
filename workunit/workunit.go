@@ -55,9 +55,8 @@ func ToJSON(wu WorkUnit) []byte {
 }
 
 // ParseJSON : Convert our workunit to JSON
-func ParseJSON(data []byte) WorkUnit {
+func ParseJSON(data []byte) (WorkUnit, error) {
 	var unit WorkUnit
 	err := json.Unmarshal(data, &unit)
-	utils.FailOnError(err, "Failed to decode JSON to WorkUnit")
-	return unit
+	return unit, err
 }
