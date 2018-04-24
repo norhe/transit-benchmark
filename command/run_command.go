@@ -11,7 +11,7 @@ import (
 
 // RunCommand : x
 type RunCommand struct {
-	Ui             cli.Ui
+	UI             cli.Ui
 	QueueAddr      string
 	ShouldBatch    bool
 	VaultAddr      string
@@ -22,7 +22,7 @@ type RunCommand struct {
 // Run : x
 func (c *RunCommand) Run(args []string) int {
 	cmdFlags := flag.NewFlagSet("run", flag.ContinueOnError)
-	cmdFlags.Usage = func() { c.Ui.Output(c.Help()) }
+	cmdFlags.Usage = func() { c.UI.Output(c.Help()) }
 
 	cmdFlags.StringVar(&c.QueueAddr, "queue-addr", "amqp://guest:guest@localhost:5672/", "The rabbitmq addr")
 	cmdFlags.StringVar(&c.VaultAddr, "vault-addr", "http://localhost:8200", "The Vault server address")
@@ -34,7 +34,7 @@ func (c *RunCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.Ui.Output(fmt.Sprintf("Would connect to queue at %s and send messages to %s Vault server for key %s", c.QueueAddr, c.VaultAddr, c.TransitKeyName))
+	c.UI.Output(fmt.Sprintf("Would connect to queue at %s and send messages to %s Vault server for key %s", c.QueueAddr, c.VaultAddr, c.TransitKeyName))
 
 	vCfg := vault.Config{
 		Address:        c.VaultAddr,

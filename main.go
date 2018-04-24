@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/mitchellh/cli"
 	"github.com/norhe/transit-benchmark/command"
 	"github.com/norhe/transit-benchmark/utils"
@@ -28,7 +29,7 @@ func main() {
 	c.Commands = map[string]cli.CommandFactory{
 		"seed": func() (cli.Command, error) {
 			return &command.SeedCommand{
-				Ui: &cli.ColoredUi{
+				UI: &cli.ColoredUi{
 					Ui:          ui,
 					OutputColor: cli.UiColorBlue,
 				},
@@ -36,9 +37,17 @@ func main() {
 		},
 		"run": func() (cli.Command, error) {
 			return &command.RunCommand{
-				Ui: &cli.ColoredUi{
+				UI: &cli.ColoredUi{
 					Ui:          ui,
 					OutputColor: cli.UiColorGreen,
+				},
+			}, nil
+		},
+		"results": func() (cli.Command, error) {
+			return &command.ResultsCommand{
+				UI: &cli.ColoredUi{
+					Ui:          ui,
+					OutputColor: cli.UiColorYellow,
 				},
 			}, nil
 		},

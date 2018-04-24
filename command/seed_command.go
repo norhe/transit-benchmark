@@ -21,13 +21,13 @@ type SeedCommand struct {
 	MaxRecordSize int
 	OperationType string
 	Payload       string
-	Ui            cli.Ui
+	UI            cli.Ui
 }
 
 // Run : x
 func (c *SeedCommand) Run(args []string) int {
 	cmdFlags := flag.NewFlagSet("seed", flag.ContinueOnError)
-	cmdFlags.Usage = func() { c.Ui.Output(c.Help()) }
+	cmdFlags.Usage = func() { c.UI.Output(c.Help()) }
 
 	cmdFlags.IntVar(&c.NumRecords, "num-records", 500, "The number of records to seed for benchmarking")
 	cmdFlags.IntVar(&c.MaxRecordSize, "max-record-size", 1024, "The max record size to generate")
@@ -38,7 +38,7 @@ func (c *SeedCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.Ui.Output(fmt.Sprintf("Seeding %d records with max size %d to queue at %s", c.NumRecords, c.MaxRecordSize, c.QueueAddr))
+	c.UI.Output(fmt.Sprintf("Seeding %d records with max size %d to queue at %s", c.NumRecords, c.MaxRecordSize, c.QueueAddr))
 
 	queue.SeedQueueRandom(c.QueueAddr, workunit.WorkUnitByName[c.OperationType], c.NumRecords, c.MaxRecordSize)
 
