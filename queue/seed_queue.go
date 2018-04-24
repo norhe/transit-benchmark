@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"log"
 	"math/rand"
 
 	"github.com/norhe/transit-benchmark/utils"
@@ -30,7 +29,7 @@ func SeedQueueRandom(queueAddr string, opType workunit.OperationType, numRecords
 	utils.FailOnError(err, "Failed to declare a queue")
 
 	// Seed the queue
-	for n := 0; n <= numRecords; n++ {
+	for n := 0; n < numRecords; n++ {
 		pload := []byte(utils.RandSeq(rand.Intn(maxRecordSize)))
 		wu := workunit.WorkUnit{
 			Operation:   opType,
@@ -49,6 +48,4 @@ func SeedQueueRandom(queueAddr string, opType workunit.OperationType, numRecords
 			})
 		utils.FailOnError(err, "Failed to publish a message")
 	}
-
-	log.Printf("Seeded the queue with %d messages with max length %d", numRecords, maxRecordSize)
 }

@@ -5,11 +5,13 @@ import (
 
 	"github.com/norhe/transit-benchmark/exec_work"
 	"github.com/norhe/transit-benchmark/utils"
+	"github.com/norhe/transit-benchmark/vault"
 	"github.com/streadway/amqp"
 )
 
 // DrainQueueTransit : When a test is run it will drain a queue to find messages to send
-func DrainQueueTransit(queueAddr, vaultAddr, vaultToken, transitKeyName string) {
+//func DrainQueueTransit(queueAddr, vaultAddr, vaultToken, transitKeyName string) {
+func DrainQueueTransit(queueAddr string, vCfg vault.Config) {
 	conn, err := amqp.Dial(queueAddr)
 	utils.FailOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
@@ -43,7 +45,7 @@ func DrainQueueTransit(queueAddr, vaultAddr, vaultToken, transitKeyName string) 
 
 	go func() {
 		for msg := range msgs {
-			execwork.ExecuteWorkUnit(vaultAddr, vaultToken, transitKeyName, msg.Body)
+			execwork.ExecuteWorkUnit(vCfg, msg.Body)
 			//log.Printf("Received a message: %s", msg.Body)
 			msg.Ack(false)
 		}

@@ -31,12 +31,12 @@ func initClient(vaultAddr, vaultToken string) {
 
 // HandleCall : we want a generic way to invoke Vault calls.  The OperationType should
 // tell the vault client what to do
-func HandleCall(vaultAddr, vaultToken, keyName string, wu *workunit.WorkUnit) error {
-	initClient(vaultAddr, vaultToken)
+func HandleCall(vCfg Config, wu *workunit.WorkUnit) error {
+	initClient(vCfg.Address, vCfg.Token)
 	op := wu.Operation
 	switch op {
 	case 0: // Encrypt
-		cipherText, err := encryptString(wu.Payload, keyName)
+		cipherText, err := encryptString(wu.Payload, vCfg.TransitKeyName)
 		wu.Output = cipherText
 		return err
 	case 7: // SignData

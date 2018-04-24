@@ -6,6 +6,7 @@ import (
 
 	"github.com/mitchellh/cli"
 	"github.com/norhe/transit-benchmark/queue"
+	"github.com/norhe/transit-benchmark/vault"
 )
 
 // RunCommand : x
@@ -25,7 +26,7 @@ func (c *RunCommand) Run(args []string) int {
 
 	cmdFlags.StringVar(&c.QueueAddr, "queue-addr", "amqp://guest:guest@localhost:5672/", "The rabbitmq addr")
 	cmdFlags.StringVar(&c.VaultAddr, "vault-addr", "http://localhost:8200", "The Vault server address")
-	cmdFlags.StringVar(&c.VaultToken, "vault-token", "", "The token to use when authenticating to Vault")
+	cmdFlags.StringVar(&c.VaultToken, "vault-token", "root", "The token to use when authenticating to Vault")
 	cmdFlags.StringVar(&c.TransitKeyName, "transit-key", "benchmark", "The transit key to use.  This key must already exist on the Vault server")
 	cmdFlags.BoolVar(&c.ShouldBatch, "batch", false, "Should transit messages be batched")
 
@@ -35,8 +36,14 @@ func (c *RunCommand) Run(args []string) int {
 
 	c.Ui.Output(fmt.Sprintf("Would connect to queue at %s and send messages to %s Vault server for key %s", c.QueueAddr, c.VaultAddr, c.TransitKeyName))
 
+	vCfg := vault.Config{
+		Address:        c.VaultAddr,
+		Token:          c.VaultToken,
+		TransitKeyName: c.TransitKeyName,
+	}
+
 	//queue.SeedQueueRandom(c.QueueAddr, c.NumRecords, c.MaxRecordSize)
-	queue.DrainQueueTransit(c.QueueAddr, c.VaultAddr, c.VaultToken, c.TransitKeyName)
+	queue.DrainQueueTransit(c.QueueAddr, vCfg)
 
 	return 0
 }

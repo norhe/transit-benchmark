@@ -12,9 +12,9 @@ import (
 
 // ExecuteWorkUnit : This is the test.  This is the call to Vault that will be
 // executed, timed, and recorded
-func ExecuteWorkUnit(vaultAddr, vaultToken, keyname string, msg []byte) error {
+//func ExecuteWorkUnit(vaultAddr, vaultToken, keyname string, msg []byte) error {
+func ExecuteWorkUnit(vCfg vault.Config, msg []byte) error {
 	// create our WorkUnit
-	log.Printf("Decoding msg: %v", msg)
 	wu, err := workunit.ParseJSON(msg)
 	utils.FailOnError(err, "Failed to decode JSON")
 	wu.StartTime = utils.Timestamp()
@@ -22,8 +22,8 @@ func ExecuteWorkUnit(vaultAddr, vaultToken, keyname string, msg []byte) error {
 	log.Printf("Created WorkUnit: %+v", wu)
 
 	// Make the call to vault
-	log.Printf("Creating Vault client with addr %s and token %s", vaultAddr, vaultToken)
-	err = vault.HandleCall(vaultAddr, vaultToken, keyname, &wu)
+	log.Printf("Creating Vault client with addr %s and token %s", vCfg.Address, vCfg.Token)
+	err = vault.HandleCall(vCfg, &wu)
 	utils.FailOnError(err, "Problem calling Vault")
 
 	wu.EndTime = utils.Timestamp()
@@ -39,5 +39,6 @@ func ExecuteWorkUnit(vaultAddr, vaultToken, keyname string, msg []byte) error {
 
 // saveResult : Save the result in the persistence layer
 func saveResult(wu workunit.WorkUnit) {
+	log.Printf("Done with WorkUnit: %+v", wu)
 	// write this message to a results queue
 }
