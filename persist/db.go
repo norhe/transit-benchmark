@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/norhe/transit-benchmark/utils"
 )
@@ -67,18 +68,32 @@ func CreateTables(conf Config) {
 
 	// Operations
 	createOperationTypeTable :=
-		"CREATE TABLE IF NOT EXISTS `operation_type`(" +
+		"CREATE TABLE IF NOT EXISTS `op_type`(" +
 			"`operation_type_id` INT(11) NOT NULL, " +
 			"`operation_type` varchar(256) NOT NULL, " +
 			"PRIMARY KEY (operation_type_id) " +
 			") engine=InnoDB;"
 
-	log.Println("Creating operation_type table (if not exist)")
+	log.Println("Creating op_type table (if not exist)")
 
 	_, err = db.Exec(createOperationTypeTable)
 	utils.FailOnError(err, "Failed to create operation_type table")
+
+	err = populateOpTable(db)
+	utils.FailOnError(err, "Failed to populate operation table")
 }
 
-func populateOpTable(db *sql.DB, conf *Config) {
-
+func populateOpTable(db *sql.DB) error {
+	statement := "INSERT INTO `op_type` (operation_type_id, operation_type)" +
+		"VALUES (0, \"Encrypt\"), (1, \"Decrypt\"), (2, \"Rewrap\")," +
+		"(3, \"GenerateDataKey\"), (4, \"GenerateRandomBytes\")," +
+		"(5, \"HashData\"), (6, \"GenerateHMAC\")," +
+		"(7, \"SignData\"), (8, \"VerifySignedData\");"
+	_, err := db.Exec(statement)
+	// we expect duplicate entry error here on subsequent starts
+	if err != nil && !strings.Contains(err.Error(), "Error 1062") {
+		log.Print(err)
+		return err
+	}
+	return nil
 }
