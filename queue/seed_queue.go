@@ -12,7 +12,7 @@ import (
 var qConf relay.Config
 
 // SeedQueueRandom : seeds random messages to be transitted.  Should work with OperationTypes Encrypt, SignData, HashData
-func SeedQueueRandom(queueAddr string, opType workunit.OperationType, numRecords, maxRecordSize int) {
+func SeedQueueRandom(queueAddr string, opType workunit.OperationType, numRecords, maxRecordSize int, testID string) {
 	conn, err := amqp.Dial(queueAddr)
 	utils.FailOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()

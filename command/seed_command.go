@@ -21,6 +21,7 @@ type SeedCommand struct {
 	MaxRecordSize int
 	OperationType string
 	Payload       string
+	TestID        string
 	UI            cli.Ui
 }
 
@@ -33,6 +34,7 @@ func (c *SeedCommand) Run(args []string) int {
 	cmdFlags.IntVar(&c.MaxRecordSize, "max-record-size", 1024, "The max record size to generate")
 	cmdFlags.StringVar(&c.OperationType, "op-type", "Encrypt", "The operation type to seed: Encrypt, Decrypt, Rewrap, GenerateDataKey, GenerateRandomBytes, GenerateHMAC, SignData, VerifySignedData")
 	cmdFlags.StringVar(&c.QueueAddr, "queue-addr", "amqp://guest:guest@localhost:5672/", "The rabbitmq addr")
+	cmdFlags.StringVar(&c.TestID, "test-id", "1", "Associate all results with test-id")
 
 	if err := cmdFlags.Parse(args); err != nil {
 		return 1
@@ -40,7 +42,7 @@ func (c *SeedCommand) Run(args []string) int {
 
 	c.UI.Output(fmt.Sprintf("Seeding %d records with max size %d to queue at %s", c.NumRecords, c.MaxRecordSize, c.QueueAddr))
 
-	queue.SeedQueueRandom(c.QueueAddr, workunit.WorkUnitByName[c.OperationType], c.NumRecords, c.MaxRecordSize)
+	queue.SeedQueueRandom(c.QueueAddr, workunit.WorkUnitByName[c.OperationType], c.NumRecords, c.MaxRecordSize, c.TestID)
 
 	return 0
 }

@@ -18,6 +18,7 @@ type WorkUnit struct {
 	PayloadSize int           `json:"PayloadSize"`
 	Payload     []byte        `json:"Payload"`
 	Output      string        `json:"Output"`
+	TestID      string        `json:"TestID"`
 }
 
 // OperationType : The API operation we will perform for a unit of work

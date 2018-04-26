@@ -51,7 +51,7 @@ func DrainQueueTransit(queueAddr string, vCfg vault.Config) {
 			execwork.ExecuteWorkUnit(vCfg, msg.Body)
 			count++
 
-			if count%100 == 0 {
+			if count%1000 == 0 {
 				log.Printf("Performed %d operations:", count)
 				for k, v := range stats.OpStatsMap {
 					if v.Count > 0 {
