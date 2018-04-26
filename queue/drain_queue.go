@@ -52,12 +52,13 @@ func DrainQueueTransit(queueAddr string, vCfg vault.Config) {
 			count++
 
 			if count%1000 == 0 {
-				log.Printf("Performed %d operations:", count)
 				for k, v := range stats.OpStatsMap {
 					if v.Count > 0 {
 						log.Printf("Calculated %d operations of type %v.  Average duration of operation: %s, max duration: %s, least duration: %s", v.Count, k, v.AverageDuration.String(), v.MaxDuration.String(), v.LeastDuration.String())
 					}
+
 				}
+				log.Printf("We're doing %s", stats.GetRPS())
 			}
 
 			msg.Ack(false)

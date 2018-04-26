@@ -1,6 +1,7 @@
 package stats
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/norhe/transit-benchmark/workunit"
@@ -16,13 +17,17 @@ type OpStats struct {
 	LeastDuration   time.Duration
 }
 
-/*type RPS struct {
-	Count     int32
-	StartTime time
-}*/
+// RPS : Requests per second
+type RPS struct {
+	Count     float64
+	StartTime time.Time
+}
 
 // OpStatsMap : Keep a running record of the test cycle
 var OpStatsMap map[workunit.OperationType]*OpStats
+
+// ReqPerSecond : Track requests per second
+var ReqPerSecond *RPS
 
 func init() {
 	OpStatsMap = map[workunit.OperationType]*OpStats{
@@ -36,6 +41,9 @@ func init() {
 		workunit.SignData:            new(OpStats),
 		workunit.VerifySignedData:    new(OpStats),
 	}
+
+	ReqPerSecond = new(RPS)
+	ReqPerSecond.StartTime = time.Now().UTC()
 }
 
 // RecordStats : Record stats for iteration, convert all durations to milliseconds
@@ -51,5 +59,21 @@ func RecordStats(wu *workunit.WorkUnit) error {
 
 	OpStatsMap[wu.Operation].AverageDuration = OpStatsMap[wu.Operation].TotalDuration / time.Duration(OpStatsMap[wu.Operation].Count)
 
+	calcRPS()
+
 	return nil
+}
+
+func calcRPS() {
+	if time.Now().UTC().Sub(ReqPerSecond.StartTime) > (2 * time.Second) {
+		ReqPerSecond.StartTime = time.Now().UTC()
+	}
+	ReqPerSecond.Count++
+}
+
+// GetRPS : print the requests per second.
+func GetRPS() string {
+	elapsed := time.Now().UTC().Sub(ReqPerSecond.StartTime)
+	rps := ReqPerSecond.Count / elapsed.Seconds()
+	return fmt.Sprintf("%v has elapsed.  We're doing %.1f Requests/Second", elapsed, rps)
 }
