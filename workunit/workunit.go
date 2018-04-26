@@ -2,15 +2,17 @@ package workunit
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/norhe/transit-benchmark/utils"
 )
 
-// WorkUnit : This represents a single test.
+// WorkUnit : This represents a single test.  Duration in milliseconds
 type WorkUnit struct {
 	StartTime   time.Time     `json:"StartTime"`
 	EndTime     time.Time     `json:"EndTime"`
+	Duration    time.Duration `json:"Duration"`
 	Operation   OperationType `json:"Operation"`
 	Exception   string        `json:"Exception"`
 	PayloadSize int           `json:"PayloadSize"`
@@ -45,6 +47,31 @@ var WorkUnitByName = map[string]OperationType{
 	"GenerateHMAC":        GenerateHMAC,
 	"SignData":            SignData,
 	"VerifySignedData":    VerifySignedData,
+}
+
+func (op OperationType) String() string {
+	switch op {
+	case Encrypt:
+		return "Encrypt"
+	case Decrypt:
+		return "Decrypt"
+	case Rewrap:
+		return "Rewrap"
+	case GenerateDataKey:
+		return "GenerateDataKey"
+	case GenerateRandomBytes:
+		return "GenerateRandomBytes"
+	case HashData:
+		return "HashData"
+	case GenerateHMAC:
+		return "GenerateHMAC"
+	case SignData:
+		return "SignData"
+	case VerifySignedData:
+		return "VerifySignedData"
+	default:
+		return fmt.Sprintf("%d", int(op))
+	}
 }
 
 // ToJSON : Convert our workunit to JSON

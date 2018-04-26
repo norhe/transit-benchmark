@@ -3,10 +3,13 @@ package queue
 import (
 	"math/rand"
 
+	"github.com/armon/relay"
 	"github.com/norhe/transit-benchmark/utils"
 	"github.com/norhe/transit-benchmark/workunit"
 	"github.com/streadway/amqp"
 )
+
+var qConf relay.Config
 
 // SeedQueueRandom : seeds random messages to be transitted.  Should work with OperationTypes Encrypt, SignData, HashData
 func SeedQueueRandom(queueAddr string, opType workunit.OperationType, numRecords, maxRecordSize int) {
@@ -48,4 +51,21 @@ func SeedQueueRandom(queueAddr string, opType workunit.OperationType, numRecords
 			})
 		utils.FailOnError(err, "Failed to publish a message")
 	}
+}
+
+// WriteResults : This will write each WorkUnit to a results queue to be processed
+func WriteResults(queueAddr string) {
+	jsonSerializer := &relay.JSONSerializer{}
+	conf := &relay.Config{
+		Addr:       queueAddr,
+		Serializer: jsonSerializer,
+	}
+	conn, err := relay.New(conf)
+	utils.FailOnError(err, "Failed to create writeresults queue")
+	defer conn.Close()
+
+	pub, err := conn.Publisher("results")
+	defer pub.Close()
+
+	pub.Publish("Testing")
 }

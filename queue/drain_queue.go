@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/norhe/transit-benchmark/exec_work"
+	"github.com/norhe/transit-benchmark/stats"
 	"github.com/norhe/transit-benchmark/utils"
 	"github.com/norhe/transit-benchmark/vault"
 	"github.com/streadway/amqp"
@@ -43,10 +44,22 @@ func DrainQueueTransit(queueAddr string, vCfg vault.Config) {
 
 	forever := make(chan bool)
 
+	count := 0
+
 	go func() {
 		for msg := range msgs {
 			execwork.ExecuteWorkUnit(vCfg, msg.Body)
-			//log.Printf("Received a message: %s", msg.Body)
+			count++
+
+			if count%100 == 0 {
+				log.Printf("Performed %d operations:", count)
+				for k, v := range stats.OpStatsMap {
+					if v.Count > 0 {
+						log.Printf("Calculated %d operations of type %v.  Average duration of operation: %s, max duration: %s, least duration: %s", v.Count, k, v.AverageDuration.String(), v.MaxDuration.String(), v.LeastDuration.String())
+					}
+				}
+			}
+
 			msg.Ack(false)
 		}
 	}()

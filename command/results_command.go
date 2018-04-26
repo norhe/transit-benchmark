@@ -39,7 +39,7 @@ func (c *ResultsCommand) Run(args []string) int {
 		DbName:   c.DbName,
 	}
 
-	persist.CreateTables(dCfg)
+	persist.CreateTables(&dCfg)
 	/*c.Ui.Output(fmt.Sprintf("Would connect to queue at %s and send messages to %s Vault server for key %s", c.QueueAddr, c.VaultAddr, c.TransitKeyName))
 
 	vCfg := vault.Config{

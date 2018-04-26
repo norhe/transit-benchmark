@@ -35,13 +35,17 @@ func HandleCall(vCfg Config, wu *workunit.WorkUnit) error {
 	initClient(vCfg.Address, vCfg.Token)
 	op := wu.Operation
 	switch op {
-	case 0: // Encrypt
+	case workunit.Encrypt:
 		cipherText, err := encryptString(wu.Payload, vCfg.TransitKeyName)
 		wu.Output = cipherText
 		return err
-	case 7: // SignData
-		cipherText, err := signData(wu.Payload, keyName)
-		wu.Output = cipherText
+	case workunit.SignData:
+		signed, err := signData(wu.Payload, keyName)
+		wu.Output = signed
+		return err
+	case workunit.GenerateHMAC:
+		hmac, err := generateHMAC(wu.Payload, keyName)
+		wu.Output = hmac
 		return err
 	default:
 		return errors.New("no suitable OperationType found")
@@ -62,18 +66,18 @@ func HandleCall(vCfg Config, wu *workunit.WorkUnit) error {
 }*/
 
 func encryptString(payload []byte, keyName string) (string, error) {
-	log.Printf("Encrypting: %s", payload)
+	//log.Printf("Encrypting: %s", payload)
 
 	// Payload must be base64 encoded before sending to Vault
 	encoded := base64.StdEncoding.EncodeToString(payload)
 
-	log.Printf("Encoded: %s", encoded)
+	//log.Printf("Encoded: %s", encoded)
 
 	// Write to Vault
 	encryptedContents, err := vlt.Logical().Write("transit/encrypt/"+keyName, map[string]interface{}{
 		"plaintext": encoded,
 	})
-	log.Printf("Encrypted: %+v", encryptedContents)
+	//log.Printf("Encrypted: %+v", encryptedContents)
 	if err != nil {
 		log.Fatalf("Error encrypting file: %s", err)
 	}
@@ -82,18 +86,38 @@ func encryptString(payload []byte, keyName string) (string, error) {
 }
 
 func signData(payload []byte, keyName string) (string, error) {
-	log.Printf("Encrypting: %s", payload)
+	//log.Printf("Encrypting: %s", payload)
 
 	// Payload must be base64 encoded before sending to Vault
 	encoded := base64.StdEncoding.EncodeToString(payload)
 
-	log.Printf("Encoded: %s", encoded)
+	//log.Printf("Encoded: %s", encoded)
 
 	// Write to Vault
-	encryptedContents, err := vlt.Logical().Write("transit/encrypt/"+keyName, map[string]interface{}{
+	encryptedContents, err := vlt.Logical().Write("transit/sign/"+keyName, map[string]interface{}{
 		"plaintext": encoded,
 	})
-	log.Printf("Encrypted: %+v", encryptedContents)
+	//log.Printf("Encrypted: %+v", encryptedContents)
+	if err != nil {
+		log.Fatalf("Error encrypting file: %s", err)
+	}
+
+	return encryptedContents.Data["ciphertext"].(string), err
+}
+
+func generateHMAC(payload []byte, keyName string) (string, error) {
+	//log.Printf("Encrypting: %s", payload)
+
+	// Payload must be base64 encoded before sending to Vault
+	encoded := base64.StdEncoding.EncodeToString(payload)
+
+	//log.Printf("Encoded: %s", encoded)
+
+	// Write to Vault
+	encryptedContents, err := vlt.Logical().Write("transit/hmac/"+keyName, map[string]interface{}{
+		"plaintext": encoded,
+	})
+	//log.Printf("Encrypted: %+v", encryptedContents)
 	if err != nil {
 		log.Fatalf("Error encrypting file: %s", err)
 	}

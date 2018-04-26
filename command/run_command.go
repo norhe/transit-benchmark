@@ -34,7 +34,7 @@ func (c *RunCommand) Run(args []string) int {
 		return 1
 	}
 
-	c.UI.Output(fmt.Sprintf("Would connect to queue at %s and send messages to %s Vault server for key %s", c.QueueAddr, c.VaultAddr, c.TransitKeyName))
+	c.UI.Output(fmt.Sprintf("Connecting to queue at %s and sending messages to Vault server %s for key %s", c.QueueAddr, c.VaultAddr, c.TransitKeyName))
 
 	vCfg := vault.Config{
 		Address:        c.VaultAddr,

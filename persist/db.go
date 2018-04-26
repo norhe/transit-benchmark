@@ -19,7 +19,7 @@ type Config struct {
 
 var db *sql.DB
 
-func initDb(cfg Config) {
+func initDb(cfg *Config) {
 	if nil == db {
 		d, err := sql.Open("mysql", fmt.Sprintf("%s:%s@%s/%s", cfg.Username, cfg.Password, cfg.Addr, cfg.DbName))
 		utils.FailOnError(err, "Failed to connect to database")
@@ -28,7 +28,8 @@ func initDb(cfg Config) {
 
 }
 
-func CreateTables(conf Config) {
+// CreateTables : Init the db for saving results
+func CreateTables(conf *Config) {
 	initDb(conf)
 	_, err := db.Exec("USE " + conf.DbName)
 	utils.FailOnError(err, "Failed to connect to DB")
